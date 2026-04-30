@@ -20,15 +20,22 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 app = Flask(__name__)
 
-# 🔐 CORS (CHANGE DOMAIN BEFORE DEPLOY)
-CORS(app, resources={
-    r"/*": {
-        "origins": [
-             "https://pdd-finalyear.web.app",
-            "https://pdd-finalyear.firebaseapp.com"
-        ]
-    }
-}, supports_credentials=True)
+# 🔐 CORS
+# Allow Firebase Hosting + Authorization header (Bearer token) for /predict.
+CORS(
+    app,
+    resources={
+        r"/*": {
+            "origins": [
+                "https://pdd-finalyear.web.app",
+                "https://pdd-finalyear.firebaseapp.com",
+            ],
+        }
+    },
+    supports_credentials=False,
+    allow_headers=["Content-Type", "Authorization"],
+    methods=["GET", "POST", "OPTIONS"],
+)
 
 # 🔐 File upload limit
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB
