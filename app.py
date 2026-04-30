@@ -24,7 +24,8 @@ app = Flask(__name__)
 CORS(app, resources={
     r"/*": {
         "origins": [
-            "https://your-frontend.web.app"
+             "https://pdd-finalyear.web.app",
+            "https://pdd-finalyear.firebaseapp.com"
         ]
     }
 }, supports_credentials=True)
