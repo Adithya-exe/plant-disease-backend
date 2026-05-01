@@ -34,20 +34,7 @@ app = Flask(__name__)
 
 
 # ===== CORS =====
-CORS(
-    app,
-    resources={
-        r"/*": {
-            "origins": [
-                "https://pdd-finalyear.web.app",
-                "https://pdd-finalyear.firebaseapp.com",
-            ],
-        }
-    },
-    supports_credentials=False,
-    allow_headers=["Content-Type", "Authorization"],
-    methods=["GET", "POST", "OPTIONS"],
-)
+CORS(app)
 
 
 # ===== FILE LIMIT =====
