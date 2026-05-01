@@ -16,6 +16,14 @@ from firebase_admin import credentials, auth
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 tf.get_logger().setLevel('ERROR')
 
+# Keep TensorFlow lightweight on small instances (Render free tier).
+# This reduces CPU parallelism (and peak memory) during inference.
+try:
+    tf.config.threading.set_intra_op_parallelism_threads(1)
+    tf.config.threading.set_inter_op_parallelism_threads(1)
+except Exception:
+    pass
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 app = Flask(__name__)
