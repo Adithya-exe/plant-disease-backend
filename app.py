@@ -16,9 +16,11 @@ from firebase_admin import credentials, auth
 
 # ===== BASIC CONFIG =====
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"   # Force CPU only
+
 tf.get_logger().setLevel("ERROR")
 
-# Keep TensorFlow lightweight on Render free tier
+# Keep TensorFlow lightweight for Render free tier
 try:
     tf.config.threading.set_intra_op_parallelism_threads(1)
     tf.config.threading.set_inter_op_parallelism_threads(1)
@@ -109,18 +111,19 @@ try:
 
     # Warmup prediction
     dummy = np.zeros((1, IMG_SIZE, IMG_SIZE, 3), dtype=np.float32)
-    model.predict(dummy, verbose=0)
+    model.predict_on_batch(dummy)
+
     print("Warmup prediction complete")
 
 except Exception as e:
-    print("Model loading failed:", e)
+    print("Model loading failed:", str(e))
 
 
 # ===== PREPROCESS =====
 def preprocess(image_path):
     img = Image.open(image_path).convert("RGB")
     img = img.resize((IMG_SIZE, IMG_SIZE))
-    img = np.array(img) / 255.0
+    img = np.array(img, dtype=np.float32) / 255.0
     img = np.expand_dims(img, axis=0)
     return img
 
@@ -186,17 +189,16 @@ def predict():
 
         # Auth
         user = verify_token(request)
-
         if not user:
             return jsonify({"error": "Unauthorized"}), 401
 
         print("2. Auth verified")
 
-        # Model check
+        # Model
         if model is None:
             return jsonify({"error": "Model not loaded"}), 503
 
-        # Image check
+        # File
         if "image" not in request.files:
             return jsonify({"error": "No image provided"}), 400
 
@@ -208,7 +210,7 @@ def predict():
         if not allowed_file(file.filename):
             return jsonify({"error": "Invalid file type"}), 400
 
-        # Save image
+        # Save
         filename = str(uuid.uuid4()) + "_" + file.filename
         path = os.path.join(UPLOAD_FOLDER, filename)
         file.save(path)
@@ -220,14 +222,19 @@ def predict():
         print("4. Preprocessing complete")
 
         # Predict
-        pred = model.predict(img, verbose=0)
+        pred_start = time.time()
+        pred = model.predict_on_batch(img)
+        print(f"Predict time: {time.time() - pred_start:.2f} sec")
         print("5. Prediction complete")
 
+        # Results
         idx = int(np.argmax(pred))
         confidence = float(np.max(pred)) * 100
 
         predicted_class_raw = classes[idx]
-        predicted_class = predicted_class_raw.replace("___", " - ").replace("_", " ")
+        predicted_class = predicted_class_raw.replace(
+            "___", " - "
+        ).replace("_", " ")
 
         print(
             f"Prediction: {predicted_class} "
@@ -236,7 +243,7 @@ def predict():
 
         print(f"Total time: {time.time() - start:.2f} sec")
 
-        # Response message
+        # Message
         if confidence < 40:
             message = f"Likely: {predicted_class}"
         elif confidence < 70:
@@ -256,7 +263,6 @@ def predict():
         return jsonify({"error": str(e)}), 500
 
     finally:
-        # Cleanup
         if path and os.path.exists(path):
             os.remove(path)
 
