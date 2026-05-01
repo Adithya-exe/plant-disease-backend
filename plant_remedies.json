@@ -1,0 +1,154 @@
+[
+  {
+    "name": "Apple___Apple_scab",
+    "remedy": "Apply protectant fungicides such as captan or mancozeb at green tip stage; use resistant cultivars; remove fallen leaf litter to reduce inoculum."
+  },
+  {
+    "name": "Apple___Black_rot",
+    "remedy": "Prune and destroy infected tissues; apply fungicides like thiophanate-methyl or captan; maintain orchard sanitation."
+  },
+  {
+    "name": "Apple___Cedar_apple_rust",
+    "remedy": "Apply fungicides such as myclobutanil during early season; remove nearby juniper hosts; plant resistant varieties."
+  },
+  {
+    "name": "Apple___healthy",
+    "remedy": "Maintain balanced fertilization, proper pruning, and regular monitoring for early disease detection."
+  },
+  {
+    "name": "Blueberry___healthy",
+    "remedy": "Maintain acidic soil pH (4.5\u20135.5), proper irrigation, and periodic nutrient management."
+  },
+  {
+    "name": "Cherry_(including_sour)___Powdery_mildew",
+    "remedy": "Apply sulfur or systemic fungicides like myclobutanil; ensure good canopy airflow and avoid excessive nitrogen fertilization."
+  },
+  {
+    "name": "Cherry_(including_sour)___healthy",
+    "remedy": "Follow standard orchard practices including pruning, irrigation, and pest monitoring."
+  },
+  {
+    "name": "Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot",
+    "remedy": "Use resistant hybrids; apply strobilurin or triazole fungicides; practice crop rotation and residue management."
+  },
+  {
+    "name": "Corn_(maize)___Common_rust_",
+    "remedy": "Plant resistant hybrids; apply foliar fungicides such as azoxystrobin when disease pressure is high."
+  },
+  {
+    "name": "Corn_(maize)___Northern_Leaf_Blight",
+    "remedy": "Use resistant varieties; apply fungicides like propiconazole; implement crop rotation."
+  },
+  {
+    "name": "Corn_(maize)___healthy",
+    "remedy": "Ensure optimal fertilization, irrigation, and integrated pest management practices."
+  },
+  {
+    "name": "Grape___Black_rot",
+    "remedy": "Apply fungicides such as mancozeb or myclobutanil; remove mummified berries; ensure proper canopy management."
+  },
+  {
+    "name": "Grape___Esca_(Black_Measles)",
+    "remedy": "Remove and destroy infected vines; minimize pruning wounds; apply trunk protectants where applicable."
+  },
+  {
+    "name": "Grape___Leaf_blight_(Isariopsis_Leaf_Spot)",
+    "remedy": "Apply fungicides like copper-based compounds; remove infected foliage; improve air circulation."
+  },
+  {
+    "name": "Grape___healthy",
+    "remedy": "Maintain canopy management, irrigation scheduling, and nutrient balance."
+  },
+  {
+    "name": "Orange___Haunglongbing_(Citrus_greening)",
+    "remedy": "Control vector (Asian citrus psyllid) using systemic insecticides like imidacloprid; remove infected trees; use certified disease-free planting material."
+  },
+  {
+    "name": "Peach___Bacterial_spot",
+    "remedy": "Apply copper-based bactericides; use resistant cultivars; avoid overhead irrigation to reduce leaf wetness."
+  },
+  {
+    "name": "Peach___healthy",
+    "remedy": "Maintain orchard sanitation, balanced nutrition, and routine pest scouting."
+  },
+  {
+    "name": "Pepper,_bell___Bacterial_spot",
+    "remedy": "Apply copper bactericides with mancozeb; use disease-free seeds; practice crop rotation and avoid overhead irrigation."
+  },
+  {
+    "name": "Pepper,_bell___healthy",
+    "remedy": "Ensure proper irrigation, fertilization, and pest monitoring."
+  },
+  {
+    "name": "Potato___Early_blight",
+    "remedy": "Apply fungicides such as chlorothalonil or mancozeb; practice crop rotation; remove infected plant debris."
+  },
+  {
+    "name": "Potato___Late_blight",
+    "remedy": "Apply systemic fungicides like metalaxyl or cyazofamid; destroy infected plants; avoid overhead irrigation."
+  },
+  {
+    "name": "Potato___healthy",
+    "remedy": "Maintain proper soil health, irrigation, and nutrient management."
+  },
+  {
+    "name": "Raspberry___healthy",
+    "remedy": "Follow proper pruning, irrigation, and integrated pest management practices."
+  },
+  {
+    "name": "Soybean___healthy",
+    "remedy": "Maintain soil fertility, proper spacing, and monitor for pests and diseases."
+  },
+  {
+    "name": "Squash___Powdery_mildew",
+    "remedy": "Apply fungicides such as sulfur or potassium bicarbonate; use resistant varieties; improve air circulation."
+  },
+  {
+    "name": "Strawberry___Leaf_scorch",
+    "remedy": "Apply fungicides like captan; remove infected leaves; ensure proper spacing and airflow."
+  },
+  {
+    "name": "Strawberry___healthy",
+    "remedy": "Maintain proper irrigation, mulching, and nutrient management."
+  },
+  {
+    "name": "Tomato___Bacterial_spot",
+    "remedy": "Apply copper-based bactericides; use resistant varieties; avoid overhead irrigation."
+  },
+  {
+    "name": "Tomato___Early_blight",
+    "remedy": "Apply fungicides such as chlorothalonil or mancozeb; remove infected leaves; practice crop rotation."
+  },
+  {
+    "name": "Tomato___Late_blight",
+    "remedy": "Apply systemic fungicides like metalaxyl; remove infected plants; ensure proper drainage."
+  },
+  {
+    "name": "Tomato___Leaf_Mold",
+    "remedy": "Apply fungicides like chlorothalonil; improve greenhouse ventilation and reduce humidity."
+  },
+  {
+    "name": "Tomato___Septoria_leaf_spot",
+    "remedy": "Apply fungicides such as mancozeb; remove infected leaves; avoid overhead irrigation."
+  },
+  {
+    "name": "Tomato___Spider_mites Two-spotted_spider_mite",
+    "remedy": "Apply acaricides like abamectin; introduce biological control agents (e.g., Phytoseiulus persimilis)."
+  },
+  {
+    "name": "Tomato___Target_Spot",
+    "remedy": "Apply fungicides such as azoxystrobin; remove infected plant debris; practice crop rotation."
+  },
+  {
+    "name": "Tomato___Tomato_Yellow_Leaf_Curl_Virus",
+    "remedy": "Control whitefly vectors using insecticides like imidacloprid; remove infected plants; use resistant hybrids."
+  },
+  {
+    "name": "Tomato___Tomato_mosaic_virus",
+    "remedy": "Remove infected plants; disinfect tools; avoid tobacco contamination; use resistant varieties."
+  },
+  {
+    "name": "Tomato___healthy",
+    "remedy": "Maintain optimal irrigation, fertilization, and integrated pest management practices."
+  }
+]
