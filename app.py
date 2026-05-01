@@ -76,6 +76,24 @@ with open(os.path.join(BASE_DIR, "new_class_names.json")) as f:
 
 print(f"Loaded {len(classes)} classes")
 
+# ===== LOAD REMEDIES =====
+with open(os.path.join(BASE_DIR, "plant_remedies.json")) as f:
+    raw_remedies = json.load(f)
+
+# Convert list → dictionary
+remedies = {}
+
+for item in raw_remedies:
+    key = item["name"]
+
+    # Convert to match prediction format
+    formatted_key = key.replace("___", " - ").replace("_", " ")
+
+    remedies[formatted_key] = item["remedy"]
+
+print(f"Loaded {len(remedies)} remedies")
+
+
 
 # ===== LOAD MODEL =====
 model = None
@@ -223,6 +241,8 @@ def predict():
             "___", " - "
         ).replace("_", " ")
 
+        remedy = remedies.get(predicted_class, "No remedy information available.")
+
         print(
             f"Prediction: {predicted_class} "
             f"({confidence:.2f}%)"
@@ -239,11 +259,13 @@ def predict():
             message = f"{predicted_class} ({confidence:.2f}% confidence)"
 
         return jsonify({
-            "prediction": predicted_class,
-            "confidence": confidence,
-            "message": message,
+         "prediction": predicted_class,
+         "confidence": confidence,
+         "message": message,
+            "remedy": remedy,
             "user": user.get("email")
         })
+
 
     except Exception as e:
         print("Prediction error:", str(e))
