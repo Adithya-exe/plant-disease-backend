@@ -7,17 +7,18 @@ from PIL import Image
 import os
 import json
 import uuid
+import time
 
-# 🔐 Firebase
+# Firebase
 import firebase_admin
 from firebase_admin import credentials, auth
 
-# ===== BASIC CONFIG =====
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-tf.get_logger().setLevel('ERROR')
 
-# Keep TensorFlow lightweight on small instances (Render free tier).
-# This reduces CPU parallelism (and peak memory) during inference.
+# ===== BASIC CONFIG =====
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+tf.get_logger().setLevel("ERROR")
+
+# Keep TensorFlow lightweight on Render free tier
 try:
     tf.config.threading.set_intra_op_parallelism_threads(1)
     tf.config.threading.set_inter_op_parallelism_threads(1)
@@ -25,11 +26,12 @@ except Exception:
     pass
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+IMG_SIZE = 128
 
 app = Flask(__name__)
 
-# 🔐 CORS
-# Allow Firebase Hosting + Authorization header (Bearer token) for /predict.
+
+# ===== CORS =====
 CORS(
     app,
     resources={
@@ -45,8 +47,10 @@ CORS(
     methods=["GET", "POST", "OPTIONS"],
 )
 
-# 🔐 File upload limit
-app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB
+
+# ===== FILE LIMIT =====
+app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5MB
+
 
 # ===== FIREBASE INIT =====
 firebase_key = os.environ.get("FIREBASE_KEY")
@@ -60,18 +64,22 @@ firebase_admin.initialize_app(cred)
 
 print("Firebase initialized")
 
+
 # ===== FOLDERS =====
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
 
 # ===== CUSTOM LAYERS =====
 @keras.saving.register_keras_serializable(package="Custom")
 def reduce_mean_spatial(x):
     return tf.reduce_mean(x, axis=-1, keepdims=True)
 
+
 @keras.saving.register_keras_serializable(package="Custom")
 def reduce_max_spatial(x):
     return tf.reduce_max(x, axis=-1, keepdims=True)
+
 
 # ===== LOAD CLASSES =====
 with open(os.path.join(BASE_DIR, "new_class_names.json")) as f:
@@ -79,8 +87,10 @@ with open(os.path.join(BASE_DIR, "new_class_names.json")) as f:
 
 print(f"Loaded {len(classes)} classes")
 
+
 # ===== LOAD MODEL =====
 model = None
+
 try:
     print("Loading model...")
 
@@ -97,10 +107,14 @@ try:
 
     print("Model loaded successfully!")
 
+    # Warmup prediction
+    dummy = np.zeros((1, IMG_SIZE, IMG_SIZE, 3), dtype=np.float32)
+    model.predict(dummy, verbose=0)
+    print("Warmup prediction complete")
+
 except Exception as e:
     print("Model loading failed:", e)
 
-IMG_SIZE = 128
 
 # ===== PREPROCESS =====
 def preprocess(image_path):
@@ -109,6 +123,7 @@ def preprocess(image_path):
     img = np.array(img) / 255.0
     img = np.expand_dims(img, axis=0)
     return img
+
 
 # ===== TOKEN VERIFY =====
 def verify_token(req):
@@ -119,21 +134,26 @@ def verify_token(req):
 
     try:
         parts = auth_header.split(" ")
+
         if len(parts) != 2:
             return None
 
         token = parts[1]
         decoded = auth.verify_id_token(token)
+
         return decoded
 
     except Exception as e:
         print("Auth error:", str(e))
         return None
 
+
+# ===== ROUTES =====
 @app.route("/")
 def home():
     return "Plant Disease API Running 🚀"
-# ===== HEALTH CHECK =====
+
+
 @app.route("/health", methods=["GET"])
 def health():
     return jsonify({
@@ -141,23 +161,42 @@ def health():
         "modelLoaded": model is not None
     })
 
+
+@app.route("/warmup", methods=["GET"])
+def warmup():
+    return jsonify({"ok": True})
+
+
 # ===== PREDICT =====
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
 
+
 def allowed_file(filename):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+    return "." in filename and \
+           filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 @app.route("/predict", methods=["POST"])
 def predict():
+    start = time.time()
+    path = None
+
     try:
-        # 🔐 AUTH
+        print("\n1. Request received")
+
+        # Auth
         user = verify_token(request)
+
         if not user:
             return jsonify({"error": "Unauthorized"}), 401
 
+        print("2. Auth verified")
+
+        # Model check
         if model is None:
             return jsonify({"error": "Model not loaded"}), 503
 
+        # Image check
         if "image" not in request.files:
             return jsonify({"error": "No image provided"}), 400
 
@@ -166,40 +205,44 @@ def predict():
         if file.filename == "":
             return jsonify({"error": "Empty filename"}), 400
 
-        # ✅ FILE TYPE CHECK (FIXED POSITION)
         if not allowed_file(file.filename):
             return jsonify({"error": "Invalid file type"}), 400
 
+        # Save image
         filename = str(uuid.uuid4()) + "_" + file.filename
         path = os.path.join(UPLOAD_FOLDER, filename)
         file.save(path)
 
-        print(f"\nUser: {user.get('email', 'unknown')}")
-        print(f"Received file: {file.filename}")
+        print("3. File saved")
 
+        # Preprocess
         img = preprocess(path)
+        print("4. Preprocessing complete")
 
+        # Predict
         pred = model.predict(img, verbose=0)
+        print("5. Prediction complete")
+
         idx = int(np.argmax(pred))
         confidence = float(np.max(pred)) * 100
 
         predicted_class_raw = classes[idx]
-
-        print(f"Prediction: {predicted_class_raw} ({confidence:.2f}%)")
-
-        try:
-            os.remove(path)
-        except:
-            pass
-
         predicted_class = predicted_class_raw.replace("___", " - ").replace("_", " ")
 
+        print(
+            f"Prediction: {predicted_class} "
+            f"({confidence:.2f}%)"
+        )
+
+        print(f"Total time: {time.time() - start:.2f} sec")
+
+        # Response message
         if confidence < 40:
-            message = f"The plant is likely {predicted_class}"
+            message = f"Likely: {predicted_class}"
         elif confidence < 70:
-            message = f"Prediction: {predicted_class} (confidence is moderate)"
+            message = f"{predicted_class} (moderate confidence)"
         else:
-            message = f"It is {confidence:.2f}% confirmed that the plant has {predicted_class}"
+            message = f"{predicted_class} ({confidence:.2f}% confidence)"
 
         return jsonify({
             "prediction": predicted_class,
@@ -209,8 +252,14 @@ def predict():
         })
 
     except Exception as e:
-        print("Prediction error:", e)
-        return jsonify({"error": "Prediction failed"}), 500
+        print("Prediction error:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        # Cleanup
+        if path and os.path.exists(path):
+            os.remove(path)
+
 
 # ===== RUN =====
 if __name__ == "__main__":
