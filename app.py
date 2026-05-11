@@ -101,48 +101,44 @@ class CBAMLayer(layers.Layer):
 
     def call(self, x):
 
-    # Channel Attention
-        avg_p = ops.mean(
-        x,
-        axis=(1, 2),
-        keepdims=True
-     )
-
-        max_p = ops.max(
-        x,
-        axis=(1, 2),
-        keepdims=True
-     )
-
-        ca = ops.sigmoid(
-        self.shared_2(self.shared_1(avg_p)) +
-        self.shared_2(self.shared_1(max_p))
+        avg_p = tf.reduce_mean(
+            x,
+            axis=(1, 2),
+            keepdims=True
         )
 
-    # IMPORTANT FIX
-        ca = ops.cast(ca, x.dtype)
+        max_p = tf.reduce_max(
+            x,
+            axis=(1, 2),
+            keepdims=True
+        )
+
+        ca = tf.sigmoid(
+            self.shared_2(self.shared_1(avg_p)) +
+            self.shared_2(self.shared_1(max_p))
+        )
+
+        ca = tf.cast(ca, x.dtype)
 
         x = x * ca
 
-    # Spatial Attention
-        avg_s = ops.mean(
-        x,
-        axis=-1,
-        keepdims=True
-     )
+        avg_s = tf.reduce_mean(
+            x,
+            axis=-1,
+            keepdims=True
+        )
 
-        max_s = ops.max(
-        x,
-        axis=-1,
-        keepdims=True
+        max_s = tf.reduce_max(
+            x,
+            axis=-1,
+            keepdims=True
         )
 
         sa = self.spatial_conv(
-        ops.concatenate([avg_s, max_s], axis=-1)
+            tf.concat([avg_s, max_s], axis=-1)
         )
 
-    # IMPORTANT FIX
-        sa = ops.cast(sa, x.dtype)
+        sa = tf.cast(sa, x.dtype)
 
         return x * sa
 
@@ -172,16 +168,15 @@ class PatchEncoder(layers.Layer):
 
     def call(self, patch):
 
-        positions = ops.arange(
-        start=0,
-        stop=self.num_patches,
-        step=1
+        positions = tf.range(
+            start=0,
+            limit=self.num_patches,
+            delta=1
         )
 
         pos_embed = self.pos_emb(positions)
 
-    # IMPORTANT FIX
-        pos_embed = ops.cast(pos_embed, patch.dtype)
+        pos_embed = tf.cast(pos_embed, patch.dtype)
 
         return patch + pos_embed
 
@@ -195,7 +190,6 @@ class PatchEncoder(layers.Layer):
         })
 
         return config
-
 
 # ===== LOAD CLASSES =====
 with open(os.path.join(BASE_DIR, "new_class_names.json")) as f:
