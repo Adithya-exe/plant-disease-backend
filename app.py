@@ -102,7 +102,7 @@ try:
     print("Loading model...")
 
     model = keras.models.load_model(
-        os.path.join(BASE_DIR, "model/plant_disease_new_dset.keras"),
+        os.path.join(BASE_DIR, "model/plant_disease_final.keras"),
         compile=False,
         custom_objects={
             "reduce_mean_spatial": reduce_mean_spatial,
