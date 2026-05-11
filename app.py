@@ -2,7 +2,8 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import numpy as np
 import tensorflow as tf
-import keras
+from tensorflow import keras
+from tensorflow.keras import layers
 from PIL import Image
 import os
 import json
