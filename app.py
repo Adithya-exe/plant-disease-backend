@@ -318,10 +318,12 @@ except Exception as e:
 
 # ===== PREPROCESS =====
 def preprocess(image_path):
-    img = Image.open(image_path).convert("RGB")
-    img = img.resize((IMG_SIZE, IMG_SIZE))
-    img = np.array(img, dtype=np.float32) / 255.0
-    img = np.expand_dims(img, axis=0)
+    img = Image.open(file).convert("RGB")
+    img = img.resize((224, 224))
+
+    img_array = np.array(img)
+
+    img_array = np.expand_dims(img_array, axis=0)
     return img
 
 
