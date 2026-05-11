@@ -70,6 +70,114 @@ def reduce_mean_spatial(x):
 def reduce_max_spatial(x):
     return tf.reduce_max(x, axis=-1, keepdims=True)
 
+@keras.saving.register_keras_serializable()
+class CBAMLayer(layers.Layer):
+
+    def __init__(self, reduction=8, **kwargs):
+        super().__init__(**kwargs)
+        self.reduction = reduction
+
+    def build(self, input_shape):
+        channels = input_shape[-1]
+
+        self.shared_1 = layers.Dense(
+            channels // self.reduction,
+            activation='relu'
+        )
+
+        self.shared_2 = layers.Dense(channels)
+
+        self.spatial_conv = layers.Conv2D(
+            1,
+            7,
+            padding='same',
+            activation='sigmoid'
+        )
+
+    def call(self, x):
+
+        avg_p = tf.reduce_mean(
+            x,
+            axis=(1, 2),
+            keepdims=True
+        )
+
+        max_p = tf.reduce_max(
+            x,
+            axis=(1, 2),
+            keepdims=True
+        )
+
+        ca = tf.nn.sigmoid(
+            self.shared_2(self.shared_1(avg_p)) +
+            self.shared_2(self.shared_1(max_p))
+        )
+
+        x = x * ca
+
+        avg_s = tf.reduce_mean(
+            x,
+            axis=-1,
+            keepdims=True
+        )
+
+        max_s = tf.reduce_max(
+            x,
+            axis=-1,
+            keepdims=True
+        )
+
+        sa = self.spatial_conv(
+            tf.concat([avg_s, max_s], axis=-1)
+        )
+
+        return x * sa
+
+    def get_config(self):
+
+        config = super().get_config()
+
+        config.update({
+            "reduction": self.reduction
+        })
+
+        return config
+
+@keras.saving.register_keras_serializable()
+class PatchEncoder(layers.Layer):
+
+    def __init__(self, num_patches, embed_dim, **kwargs):
+        super().__init__(**kwargs)
+
+        self.num_patches = num_patches
+        self.embed_dim = embed_dim
+
+        self.pos_emb = layers.Embedding(
+            input_dim=num_patches,
+            output_dim=embed_dim
+        )
+
+    def call(self, patch):
+
+        positions = tf.range(
+            start=0,
+            limit=self.num_patches,
+            delta=1
+        )
+
+        return patch + self.pos_emb(positions)
+
+    def get_config(self):
+
+        config = super().get_config()
+
+        config.update({
+            "num_patches": self.num_patches,
+            "embed_dim": self.embed_dim
+        })
+
+        return config
+
 
 # ===== LOAD CLASSES =====
 with open(os.path.join(BASE_DIR, "new_class_names.json")) as f:
@@ -175,11 +283,13 @@ try:
         MODEL_PATH,
         compile=False,
         custom_objects={
-            "reduce_mean_spatial": reduce_mean_spatial,
-            "reduce_max_spatial": reduce_max_spatial,
-            "Custom>reduce_mean_spatial": reduce_mean_spatial,
-            "Custom>reduce_max_spatial": reduce_max_spatial,
-        }
+    "CBAMLayer": CBAMLayer,
+    "PatchEncoder": PatchEncoder,
+    "reduce_mean_spatial": reduce_mean_spatial,
+    "reduce_max_spatial": reduce_max_spatial,
+    "Custom>reduce_mean_spatial": reduce_mean_spatial,
+    "Custom>reduce_max_spatial": reduce_max_spatial,
+    }
     )
 
     print("Model loaded successfully!")
