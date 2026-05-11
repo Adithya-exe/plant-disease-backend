@@ -62,16 +62,16 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
 # ===== CUSTOM LAYERS =====
-@keras.saving.register_keras_serializable(package="Custom")
+@tf.keras.utils.register_keras_serializable(package="Custom")
 def reduce_mean_spatial(x):
     return tf.reduce_mean(x, axis=-1, keepdims=True)
 
 
-@keras.saving.register_keras_serializable(package="Custom")
+@tf.keras.utils.register_keras_serializable(package="Custom")
 def reduce_max_spatial(x):
     return tf.reduce_max(x, axis=-1, keepdims=True)
 
-@keras.saving.register_keras_serializable()
+@tf.keras.utils.register_keras_serializable(package="Custom")
 class CBAMLayer(layers.Layer):
 
     def __init__(self, reduction=8, **kwargs):
@@ -144,7 +144,7 @@ class CBAMLayer(layers.Layer):
 
         return config
 
-@keras.saving.register_keras_serializable()
+@tf.keras.utils.register_keras_serializable(package="Custom")
 class PatchEncoder(layers.Layer):
 
     def __init__(self, num_patches, embed_dim, **kwargs):
