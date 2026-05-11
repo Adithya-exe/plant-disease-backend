@@ -106,7 +106,24 @@ def _is_git_lfs_pointer(path: str) -> bool:
 def _ensure_model_file(model_path: str) -> None:
     """Railway and similar hosts often ship Git LFS pointer files only; optionally fetch real weights."""
     download_url = (os.environ.get("MODEL_DOWNLOAD_URL") or "").strip()
-    if os.path.isfile(model_path) and not _is_git_lfs_pointer(model_path):
+    exists = os.path.isfile(model_path)
+    size = None
+    if exists:
+        try:
+            size = os.path.getsize(model_path)
+        except OSError:
+            size = None
+
+    is_pointer = _is_git_lfs_pointer(model_path) if exists else False
+    # Heuristic: real `.keras` is typically tens/hundreds of MB. LFS pointer is tiny.
+    suspiciously_small = (size is not None) and (size < 1024 * 1024)
+
+    print(
+        "Model file check:",
+        {"exists": exists, "size_bytes": size, "is_lfs_pointer": is_pointer, "too_small": suspiciously_small},
+    )
+
+    if exists and not is_pointer and not suspiciously_small:
         return
     if not download_url:
         print("MODEL_DOWNLOAD_URL is not set; skipping model download.")
@@ -127,7 +144,10 @@ def _ensure_model_file(model_path: str) -> None:
                     break
                 out.write(chunk)
         os.replace(tmp, model_path)
-        print("Model download finished.")
+        try:
+            print("Model download finished. size_bytes=", os.path.getsize(model_path))
+        except OSError:
+            print("Model download finished.")
     finally:
         if os.path.isfile(tmp):
             try:
