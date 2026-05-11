@@ -8,6 +8,7 @@ import os
 import json
 import uuid
 import time
+import urllib.request
 
 # Firebase
 import firebase_admin
@@ -94,15 +95,60 @@ for item in raw_remedies:
 print(f"Loaded {len(remedies)} remedies")
 
 
+def _is_git_lfs_pointer(path: str) -> bool:
+    try:
+        with open(path, "r", encoding="ascii", errors="ignore") as f:
+            return f.read(32).startswith("version https://git-lfs.github.com")
+    except OSError:
+        return False
+
+
+def _ensure_model_file(model_path: str) -> None:
+    """Railway and similar hosts often ship Git LFS pointer files only; optionally fetch real weights."""
+    download_url = (os.environ.get("MODEL_DOWNLOAD_URL") or "").strip()
+    if os.path.isfile(model_path) and not _is_git_lfs_pointer(model_path):
+        return
+    if not download_url:
+        if _is_git_lfs_pointer(model_path):
+            print(
+                "Model file is a Git LFS pointer (real weights missing). "
+                "Add a Railpack build `git lfs pull` (see railpack.json) or set MODEL_DOWNLOAD_URL."
+            )
+        return
+    print("Downloading model from MODEL_DOWNLOAD_URL …")
+    os.makedirs(os.path.dirname(model_path), exist_ok=True)
+    tmp = model_path + ".part"
+    try:
+        with urllib.request.urlopen(download_url, timeout=900) as resp, open(tmp, "wb") as out:
+            while True:
+                chunk = resp.read(8 * 1024 * 1024)
+                if not chunk:
+                    break
+                out.write(chunk)
+        os.replace(tmp, model_path)
+        print("Model download finished.")
+    finally:
+        if os.path.isfile(tmp):
+            try:
+                os.remove(tmp)
+            except OSError:
+                pass
+
 
 # ===== LOAD MODEL =====
 model = None
 
+MODEL_PATH = os.environ.get(
+    "MODEL_KERAS_PATH",
+    os.path.join(BASE_DIR, "model", "plant_disease_final.keras"),
+)
+
 try:
     print("Loading model...")
+    _ensure_model_file(MODEL_PATH)
 
     model = keras.models.load_model(
-        os.path.join(BASE_DIR, "model/plant_disease_final.keras"),
+        MODEL_PATH,
         compile=False,
         custom_objects={
             "reduce_mean_spatial": reduce_mean_spatial,
