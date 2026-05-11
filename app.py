@@ -145,6 +145,9 @@ MODEL_PATH = os.environ.get(
 )
 
 try:
+    print("Startup commit:", os.environ.get("RAILWAY_GIT_COMMIT_SHA") or "unknown")
+    print("MODEL_PATH:", MODEL_PATH)
+    print("MODEL_DOWNLOAD_URL set:", bool((os.environ.get("MODEL_DOWNLOAD_URL") or "").strip()))
     print("Loading model...")
     _ensure_model_file(MODEL_PATH)
 
