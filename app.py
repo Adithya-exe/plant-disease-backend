@@ -324,7 +324,7 @@ def preprocess(image_path):
     img_array = np.array(img)
 
     img_array = np.expand_dims(img_array, axis=0)
-    return img
+    return img_array  
 
 
 # ===== TOKEN VERIFY =====
