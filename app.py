@@ -1,6 +1,9 @@
+from xml.etree.ElementPath import ops
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import numpy as np
+from requests import patch
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -98,48 +101,48 @@ class CBAMLayer(layers.Layer):
 
     def call(self, x):
 
-        # Channel Attention
-        avg_p = tf.reduce_mean(
-            x,
-            axis=(1, 2),
-            keepdims=True
+    # Channel Attention
+        avg_p = ops.mean(
+        x,
+        axis=(1, 2),
+        keepdims=True
+     )
+
+        max_p = ops.max(
+        x,
+        axis=(1, 2),
+        keepdims=True
+     )
+
+        ca = ops.sigmoid(
+        self.shared_2(self.shared_1(avg_p)) +
+        self.shared_2(self.shared_1(max_p))
         )
 
-        max_p = tf.reduce_max(
-            x,
-            axis=(1, 2),
-            keepdims=True
-        )
-
-        ca = tf.nn.sigmoid(
-            self.shared_2(self.shared_1(avg_p)) +
-            self.shared_2(self.shared_1(max_p))
-        )
-
-        # IMPORTANT FIX
-        ca = tf.cast(ca, x.dtype)
+    # IMPORTANT FIX
+        ca = ops.cast(ca, x.dtype)
 
         x = x * ca
 
-        # Spatial Attention
-        avg_s = tf.reduce_mean(
-            x,
-            axis=-1,
-            keepdims=True
-        )
+    # Spatial Attention
+        avg_s = ops.mean(
+        x,
+        axis=-1,
+        keepdims=True
+     )
 
-        max_s = tf.reduce_max(
-            x,
-            axis=-1,
-            keepdims=True
+        max_s = ops.max(
+        x,
+        axis=-1,
+        keepdims=True
         )
 
         sa = self.spatial_conv(
-            tf.concat([avg_s, max_s], axis=-1)
+        ops.concatenate([avg_s, max_s], axis=-1)
         )
 
-        # IMPORTANT FIX
-        sa = tf.cast(sa, x.dtype)
+    # IMPORTANT FIX
+        sa = ops.cast(sa, x.dtype)
 
         return x * sa
 
@@ -169,13 +172,18 @@ class PatchEncoder(layers.Layer):
 
     def call(self, patch):
 
-        positions = tf.range(
-            start=0,
-            limit=self.num_patches,
-            delta=1
+        positions = ops.arange(
+        start=0,
+        stop=self.num_patches,
+        step=1
         )
 
-        return patch + self.pos_emb(positions)
+        pos_embed = self.pos_emb(positions)
+
+    # IMPORTANT FIX
+        pos_embed = ops.cast(pos_embed, patch.dtype)
+
+        return patch + pos_embed
 
     def get_config(self):
 
