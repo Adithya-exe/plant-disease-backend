@@ -33,7 +33,7 @@ except Exception:
     pass
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-IMG_SIZE = 128
+IMG_SIZE = 224
 
 app = Flask(__name__)
 
