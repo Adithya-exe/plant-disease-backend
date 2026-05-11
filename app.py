@@ -109,6 +109,7 @@ def _ensure_model_file(model_path: str) -> None:
     if os.path.isfile(model_path) and not _is_git_lfs_pointer(model_path):
         return
     if not download_url:
+        print("MODEL_DOWNLOAD_URL is not set; skipping model download.")
         if _is_git_lfs_pointer(model_path):
             print(
                 "Model file is a Git LFS pointer (real weights missing). "
