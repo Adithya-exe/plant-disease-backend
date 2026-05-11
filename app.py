@@ -318,7 +318,7 @@ except Exception as e:
 
 # ===== PREPROCESS =====
 def preprocess(image_path):
-    img = Image.open(file).convert("RGB")
+    img = Image.open(image_path).convert("RGB")
     img = img.resize((224, 224))
 
     img_array = np.array(img)
