@@ -71,7 +71,7 @@ def reduce_mean_spatial(x):
 def reduce_max_spatial(x):
     return tf.reduce_max(x, axis=-1, keepdims=True)
 
-@tf.keras.utils.register_keras_serializable(package="Custom")
+@tf.keras.utils.register_keras_serializable()
 class CBAMLayer(layers.Layer):
 
     def __init__(self, reduction=8, **kwargs):
@@ -79,6 +79,7 @@ class CBAMLayer(layers.Layer):
         self.reduction = reduction
 
     def build(self, input_shape):
+
         channels = input_shape[-1]
 
         self.shared_1 = layers.Dense(
@@ -97,6 +98,7 @@ class CBAMLayer(layers.Layer):
 
     def call(self, x):
 
+        # Channel Attention
         avg_p = tf.reduce_mean(
             x,
             axis=(1, 2),
@@ -114,8 +116,12 @@ class CBAMLayer(layers.Layer):
             self.shared_2(self.shared_1(max_p))
         )
 
+        # IMPORTANT FIX
+        ca = tf.cast(ca, x.dtype)
+
         x = x * ca
 
+        # Spatial Attention
         avg_s = tf.reduce_mean(
             x,
             axis=-1,
@@ -131,6 +137,9 @@ class CBAMLayer(layers.Layer):
         sa = self.spatial_conv(
             tf.concat([avg_s, max_s], axis=-1)
         )
+
+        # IMPORTANT FIX
+        sa = tf.cast(sa, x.dtype)
 
         return x * sa
 
